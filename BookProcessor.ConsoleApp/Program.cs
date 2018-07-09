@@ -1,12 +1,19 @@
 ﻿using System;
+using System.Reflection;
 
 namespace BookProcessor.ConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
-            Console.WriteLine("Hello World!");
+            var bookStream = Assembly.GetAssembly(typeof(Implementation.BookProcessor))
+                .GetManifestResourceStream("BookProcessor.Implementation.NewBooks.txt");
+
+            var bookProcessor = new Implementation.BookProcessor();
+            bookProcessor.ProcessBooks(bookStream);
+
+            Console.ReadKey();
         }
     }
 }
