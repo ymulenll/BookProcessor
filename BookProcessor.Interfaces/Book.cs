@@ -1,4 +1,4 @@
-﻿namespace BookProcessor.Implementation
+﻿namespace BookProcessor.Interfaces
 {
     public class Book
     {

@@ -1,4 +1,6 @@
-﻿namespace BookProcessor.Implementation
+﻿using BookProcessor.Interfaces;
+
+namespace BookProcessor.Implementation
 {
     public class SimpleBookValidator : IBookValidator
     {

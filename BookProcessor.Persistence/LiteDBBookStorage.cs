@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BookProcessor.Interfaces;
 using LiteDB;
 
-namespace BookProcessor.Implementation
+namespace BookProcessor.Persistence
 {
     public class LiteDbBookStorage : IBookStorage
     {

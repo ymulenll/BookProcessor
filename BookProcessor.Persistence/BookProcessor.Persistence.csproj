@@ -5,11 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="NewBooks.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="NewBooks.txt" />
+    <PackageReference Include="LiteDB" Version="4.1.4" />
   </ItemGroup>
 
   <ItemGroup>

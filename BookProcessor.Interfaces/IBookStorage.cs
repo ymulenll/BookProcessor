@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BookProcessor.Implementation
+namespace BookProcessor.Interfaces
 {
     public interface IBookStorage
     {

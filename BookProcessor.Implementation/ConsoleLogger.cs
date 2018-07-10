@@ -1,4 +1,5 @@
 ﻿using System;
+using BookProcessor.Interfaces;
 
 namespace BookProcessor.Implementation
 {

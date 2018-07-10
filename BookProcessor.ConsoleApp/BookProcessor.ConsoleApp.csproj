@@ -7,6 +7,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BookProcessor.Implementation\BookProcessor.Implementation.csproj" />
+    <ProjectReference Include="..\BookProcessor.Interfaces\BookProcessor.Interfaces.csproj" />
+    <ProjectReference Include="..\BookProcessor.Persistence\BookProcessor.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

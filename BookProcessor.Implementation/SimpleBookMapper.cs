@@ -1,4 +1,6 @@
 ﻿
+using BookProcessor.Interfaces;
+
 namespace BookProcessor.Implementation
 {
     public class SimpleBookMapper : IBookMapper
