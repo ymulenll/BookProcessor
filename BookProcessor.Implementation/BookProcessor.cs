@@ -22,7 +22,7 @@ namespace BookProcessor.Implementation
 
             var books = _bookParser.Parse(bookData);
 
-            _bookStorage.Store(books);
+            _bookStorage.Persist(books);
         }
     }
 }

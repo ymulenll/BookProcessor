@@ -4,6 +4,6 @@ namespace BookProcessor.Implementation
 {
     public interface IBookStorage
     {
-        void Store(IEnumerable<Book> books);
+        void Persist(IEnumerable<Book> books);
     }
 }
