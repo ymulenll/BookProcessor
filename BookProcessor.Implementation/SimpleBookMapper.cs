@@ -1,4 +1,5 @@
 ﻿
+using System.Globalization;
 using BookProcessor.Interfaces;
 
 namespace BookProcessor.Implementation
@@ -8,7 +9,7 @@ namespace BookProcessor.Implementation
         public Book Map(string[] fields)
         {
             var title = fields[0];
-            var price = decimal.Parse(fields[1]);
+            var price = decimal.Parse(fields[1], CultureInfo.InvariantCulture);
 
             var book = new Book
             {
