@@ -14,7 +14,7 @@ namespace BookProcessor.Persistence
             _logger = logger;
         }
 
-        public void Store(IEnumerable<Book> books)
+        public void Persist(IEnumerable<Book> books)
         {
             var bookList = books.ToList();
             using (var db = new LiteDatabase(@"Books.db"))

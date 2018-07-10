@@ -13,11 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Unity" Version="5.8.6" />
-    <PackageReference Include="Unity.RegistrationByConvention" Version="2.1.5" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\BookProcessor.Interfaces\BookProcessor.Interfaces.csproj" />
   </ItemGroup>
 
