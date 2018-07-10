@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Reflection;
+using BookProcessor.Implementation;
 
 namespace BookProcessor.ConsoleApp
 {
@@ -7,11 +7,20 @@ namespace BookProcessor.ConsoleApp
     {
         private static void Main()
         {
-            var bookStream = Assembly.GetAssembly(typeof(Implementation.BookProcessor))
-                .GetManifestResourceStream("BookProcessor.Implementation.NewBooks.txt");
+            // Composition using poor's man dependency injection.
+            var logger = new ConsoleLogger();
+            var bookValidator = new SimpleBookValidator(logger);
+            var bookMapper = new SimpleBookMapper();
+            var bookParser = new SimpleBookParser(bookValidator, bookMapper);
+            var bookDataProvider = new StreamBookDataProvider();
+            var bookStorage = new LiteDbBookStorage(logger);
 
-            var bookProcessor = new Implementation.BookProcessor();
-            bookProcessor.ProcessBooks(bookStream);
+            var bookProcessor = new Implementation.BookProcessor(
+                bookDataProvider, 
+                bookParser, 
+                bookStorage);
+
+            bookProcessor.ProcessBooks();
 
             Console.ReadKey();
         }
