@@ -2,10 +2,13 @@
 using BookProcessor.Implementation;
 using BookProcessor.Implementation.Adapters;
 using BookProcessor.Implementation.Decorators;
+using BookProcessor.Implementation.Interceptors;
 using BookProcessor.Interfaces;
 using BookProcessor.Persistence;
 using Unity;
 using Unity.Injection;
+using Unity.Interception.ContainerIntegration;
+using Unity.Interception.Interceptors.InstanceInterceptors.InterfaceInterception;
 
 namespace BookProcessor.ConsoleApp
 {
@@ -43,10 +46,10 @@ namespace BookProcessor.ConsoleApp
                 bookStorage);
 
             // pipeline
-            var bookProcessorLoggerDecorator = new BookProcessorLoggerDecorator(bookProcessor, logger);
-            var booksProcessorLoggerTimer = new BookProcessorTimerDecorator(bookProcessorLoggerDecorator, loggerTimerDecorator);
+            //var bookProcessorLoggerDecorator = new BookProcessorLoggerDecorator(bookProcessor, logger);
+            //var booksProcessorLoggerTimer = new BookProcessorTimerDecorator(bookProcessorLoggerDecorator, loggerTimerDecorator);
 
-            booksProcessorLoggerTimer.ProcessBooks();
+            bookProcessor.ProcessBooks();
         }
 
         private static void ComposeDependeciesUsingDiContainer()
@@ -54,27 +57,41 @@ namespace BookProcessor.ConsoleApp
             // Composition using unity DI container.
             using (var container = new UnityContainer())
             {
+                // add interception extension to unity container
+                container.AddNewExtension<Interception>();
+
                 container.RegisterType<ILogger, ConsoleLogger>();
                 container.RegisterType<IBookValidator, SimpleBookValidator>();
                 container.RegisterType<IBookParser, SimpleBookParser>();
                 container.RegisterType<IBookMapper, SimpleBookMapper>();
                 container.RegisterType<IBookDataProvider, StreamBookDataProvider>();
-                container.RegisterType<IBookStorage, LiteDbBookStorage>();
+                container.RegisterType<IBookStorage, LiteDbBookStorage>(
+                    new Interceptor<InterfaceInterceptor>(),
+                    new InterceptionBehavior<LoggingInterceptionBehavior>(),
+                    new InterceptionBehavior<TimerInterceptionBehavior>());
 
                 // timer pipeline
-                container.RegisterType<ITimer, StopwatchTimerAdapter>();
-                container.RegisterType<ITimer, LoggingTimerDecorator>("LoggingTimerDecorator");
+                container.RegisterType<ITimer, LoggingTimerDecorator>(
+                    new InjectionConstructor(
+                        new ResolvedParameter<StopwatchTimerAdapter>(), 
+                        new ResolvedParameter<ILogger>()));
 
                 container.RegisterType<IBookProcessor, Implementation.BookProcessor>();
-
+                
                 // pipeline
-                container.RegisterType<IBookProcessor, BookProcessorLoggerDecorator>("BookProcessorLoggerDecorator");
-                container.RegisterType<IBookProcessor, BookProcessorTimerDecorator>("BookProcessorTimerDecorator",
-                    new InjectionConstructor(
-                        new ResolvedParameter<IBookProcessor>("BookProcessorLoggerDecorator"),
-                        new ResolvedParameter<ITimer>("LoggingTimerDecorator")));
+                container.RegisterType<IBookProcessor, Implementation.BookProcessor>(
+                    "BooksProcessorLoggerTimerInterceptor",
+                    new Interceptor<InterfaceInterceptor>(),
+                    new InterceptionBehavior<LoggingInterceptionBehavior>(),
+                    new InterceptionBehavior<TimerInterceptionBehavior>());
 
-                var bookProcessor = container.Resolve<IBookProcessor>("BookProcessorTimerDecorator");
+                //container.RegisterType<IBookProcessor, BookProcessorLoggerDecorator>("BookProcessorLoggerDecorator");
+                //container.RegisterType<IBookProcessor, BookProcessorTimerDecorator>("BookProcessorTimerDecorator",
+                //    new InjectionConstructor(
+                //        new ResolvedParameter<IBookProcessor>("BookProcessorLoggerDecorator"),
+                //        new ResolvedParameter<ITimer>("LoggingTimerDecorator")));
+                
+                var bookProcessor = container.Resolve<IBookProcessor>("BooksProcessorLoggerTimerInterceptor");
                 bookProcessor.ProcessBooks();
             }
         }
