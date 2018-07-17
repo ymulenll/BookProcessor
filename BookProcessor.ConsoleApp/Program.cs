@@ -1,9 +1,11 @@
 ﻿using System;
 using BookProcessor.Implementation;
+using BookProcessor.Implementation.Adapters;
+using BookProcessor.Implementation.Decorators;
 using BookProcessor.Interfaces;
 using BookProcessor.Persistence;
 using Unity;
-using Unity.RegistrationByConvention;
+using Unity.Injection;
 
 namespace BookProcessor.ConsoleApp
 {
@@ -14,32 +16,40 @@ namespace BookProcessor.ConsoleApp
             //var bookProcessor = new Implementation.BookProcessor();
             //bookProcessor.ProcessBooks();
             
-            var bookProcessor = ComposeDependeciesUsingDiContainer();
+            //ComposeUsingPoorManDependencyInjection();
 
-            bookProcessor.ProcessBooks();
+            ComposeDependeciesUsingDiContainer();
 
             Console.ReadKey();
         }
 
-        //private static Implementation.BookProcessor ComposeDependecies()
-        //{
-        //    // Composition using poor's man dependency injection.
-        //    var logger = new ConsoleLogger();
-        //    var bookValidator = new SimpleBookValidator(logger);
-        //    var bookMapper = new SimpleBookMapper();
-        //    var bookParser = new SimpleBookParser(bookValidator, bookMapper);
-        //    var bookDataProvider = new StreamBookDataProvider();
-        //    var bookStorage = new LiteDbBookStorage(logger);
+        private static void ComposeUsingPoorManDependencyInjection()
+        {
+            // Composition using poor's man dependency injection.
+            var logger = new ConsoleLogger();
+            var bookValidator = new SimpleBookValidator(logger);
+            var bookMapper = new SimpleBookMapper();
+            var bookParser = new SimpleBookParser(bookValidator, bookMapper);
+            var bookDataProvider = new StreamBookDataProvider();
+            var bookStorage = new LiteDbBookStorage(logger);
 
-        //    var bookProcessor = new Implementation.BookProcessor(
-        //        bookDataProvider,
-        //        bookParser,
-        //        bookStorage);
+            // pipeline
+            var timer = new StopwatchTimerAdapter();
+            var loggerTimerDecorator = new LoggingTimerDecorator(timer, logger);
 
-        //    return bookProcessor;
-        //}
+            var bookProcessor = new Implementation.BookProcessor(
+                bookDataProvider,
+                bookParser,
+                bookStorage);
 
-        private static Implementation.BookProcessor ComposeDependeciesUsingDiContainer()
+            // pipeline
+            var bookProcessorLoggerDecorator = new BookProcessorLoggerDecorator(bookProcessor, logger);
+            var booksProcessorLoggerTimer = new BookProcessorTimerDecorator(bookProcessorLoggerDecorator, loggerTimerDecorator);
+
+            booksProcessorLoggerTimer.ProcessBooks();
+        }
+
+        private static void ComposeDependeciesUsingDiContainer()
         {
             // Composition using unity DI container.
             using (var container = new UnityContainer())
@@ -51,27 +61,38 @@ namespace BookProcessor.ConsoleApp
                 container.RegisterType<IBookDataProvider, StreamBookDataProvider>();
                 container.RegisterType<IBookStorage, LiteDbBookStorage>();
 
-                container.RegisterType<Implementation.BookProcessor>();
+                // timer pipeline
+                container.RegisterType<ITimer, StopwatchTimerAdapter>();
+                container.RegisterType<ITimer, LoggingTimerDecorator>("LoggingTimerDecorator");
 
-                return container.Resolve<Implementation.BookProcessor>();
+                container.RegisterType<IBookProcessor, Implementation.BookProcessor>();
+
+                // pipeline
+                container.RegisterType<IBookProcessor, BookProcessorLoggerDecorator>("BookProcessorLoggerDecorator");
+                container.RegisterType<IBookProcessor, BookProcessorTimerDecorator>("BookProcessorTimerDecorator",
+                    new InjectionConstructor(
+                        new ResolvedParameter<IBookProcessor>("BookProcessorLoggerDecorator"),
+                        new ResolvedParameter<ITimer>("LoggingTimerDecorator")));
+
+                var bookProcessor = container.Resolve<IBookProcessor>("BookProcessorTimerDecorator");
+                bookProcessor.ProcessBooks();
             }
         }
 
-        private static Implementation.BookProcessor CompositionByConvention()
-        {
-            // Composition using unity DI container.
-            using (var container = new UnityContainer())
-            {
-                container.RegisterTypes(
-                    AllClasses.FromAssembliesInBasePath(),
-                    WithMappings.FromAllInterfaces,
-                    WithName.Default,
-                    WithLifetime.Transient);
+        //using Unity.RegistrationByConvention;
+        //private static Implementation.BookProcessor CompositionByConvention()
+        //{
+        //    // Composition using unity DI container.
+        //    using (var container = new UnityContainer())
+        //    {
+        //        container.RegisterTypes(
+        //            AllClasses.FromAssembliesInBasePath(),
+        //            WithMappings.FromAllInterfaces,
+        //            WithName.Default,
+        //            WithLifetime.Transient);
 
-                return container.Resolve<Implementation.BookProcessor>();
-            }
-        }
-
-        // container.RegisterType<Implementation.BookProcessor>(new InjectionConstructor(container.Resolve<IBookParser>(), container.Resolve<IBookStorage>()));
+        //        return container.Resolve<Implementation.BookProcessor>();
+        //    }
+        //}
     }
 }

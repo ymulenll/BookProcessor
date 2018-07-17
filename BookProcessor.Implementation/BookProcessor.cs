@@ -2,7 +2,7 @@
 
 namespace BookProcessor.Implementation
 {
-    public class BookProcessor
+    public class BookProcessor : IBookProcessor
     {
         private readonly IBookDataProvider _bookDataProvider;
         private readonly IBookParser _bookParser;
